@@ -1,0 +1,79 @@
+version: "3.7"
+
+services:
+
+  web:
+    restart: always
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - app-db
+    volumes:
+      - ./media/:/app/media/
+      - ./migrations/:/app/migrations/
+    networks:
+      - external-web
+      - common-net
+    command: sh ./runserver.sh
+
+  migrations:
+    restart: always
+    build: .
+    env_file:
+      - .env
+    depends_on:
+      - app-db
+    volumes:
+      - ./migrations/:/app/migrations/
+    networks:
+      - common-net
+    command: sh ./migrations.sh
+
+
+  app-db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - ${POSTGRES_PORT}:5432
+    networks:
+      - common-net
+
+  app-redis:
+    image: redis/redis-stack-server
+    ports:
+      - ${REDIS_PORT}:6379
+    networks:
+      - common-net
+
+  nginx:
+    build: ./nginx
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./certbot/www:/var/www/certbot/:ro
+      - ./certbot/conf/:/etc/nginx/ssl/:ro
+    depends_on:
+      - web
+    networks:
+      - common-net
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./certbot/www:/var/www/certbot/:rw
+      - ./certbot/conf/:/etc/letsencrypt/:rw
+
+
+networks:
+  common-net:
+    driver: bridge
+  external-web:
+    external: true
+

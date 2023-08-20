@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,14 +24,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-*u@kt9j%(z&qgxb9ky*f6-#2vm_oj8fus1n9gc2e5qjo2pi=q7'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(os.getenv("DEBUG", 1))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
 
-INSTALLED_APPS = [
+DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,6 +39,23 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
+
+
+PROJECT_APPS = [ ]
+
+
+INSTALLED_APPS = PROJECT_APPS + DJANGO_APPS
+
+
+def create_migrations_module(app):
+    if not os.path.exists("migrations/%s/__init__.py" % app):
+        os.makedirs("migrations/%s" % app)
+        with open("migrations/%s/__init__.py" % app, "w+"):
+            pass
+    return "migrations.%s" % app
+
+
+MIGRATION_MODULES = {app: create_migrations_module(app) for app in PROJECT_APPS}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -80,6 +98,17 @@ DATABASES = {
     }
 }
 
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.getenv('POSTGRES_DB', "app_db"),
+        'HOST': os.getenv("POSTGRES_HOST", "127.0.0.1"),
+        'PORT': "5432",
+        'USER': os.getenv('POSTGRES_USER', "commonuser"),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', "ASDZXC123"),
+    },
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -116,6 +145,26 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+
+REDIS_HOST = os.getenv("REDIS_HOST")
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{REDIS_HOST}:6379/",
+        #        "OPTIONS": {
+        #    "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        #    "PASSWORD": REDIS_PASSWORD
+        #}
+    }
+}
+
+CACHE_TTL = os.getenv("CACHE_TTL", 120)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
