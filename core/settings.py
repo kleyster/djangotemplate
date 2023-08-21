@@ -60,6 +60,7 @@ MIGRATION_MODULES = {app: create_migrations_module(app) for app in PROJECT_APPS}
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -68,6 +69,11 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'core.urls'
+
+"""
+    CorsHeader allow from all origin
+"""
+CORS_ALLOW_ALL_ORIGINS = True
 
 TEMPLATES = [
     {
