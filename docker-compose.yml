@@ -13,25 +13,10 @@ services:
       - app-db
     volumes:
       - ./media/:/app/media/
-      - ./migrations/:/app/migrations/
     networks:
       - external-web
       - common-net
     command: sh ./runserver.sh
-
-  migrations:
-    restart: always
-    build: .
-    env_file:
-      - .env
-    depends_on:
-      - app-db
-    volumes:
-      - ./migrations/:/app/migrations/
-    networks:
-      - common-net
-    command: sh ./migrations.sh
-
 
   app-db:
     image: postgres:latest
