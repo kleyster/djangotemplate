@@ -12,5 +12,6 @@ ADD . /app/
 
 # Install any needed packages specified in requirements.txt
 ADD requirements.txt /app/requirements.txt
+RUN python manage.py migrates
 RUN pip install --upgrade pip \
     && pip install --no-cache-dir -Ur /app/requirements.txt
